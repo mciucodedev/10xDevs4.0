@@ -1,0 +1,23 @@
+app = "gdzienasniadanie"
+primary_region = "waw"
+
+[build]
+
+[env]
+  DJANGO_ALLOWED_HOSTS = "gdzienasniadanie.fly.dev"
+  DJANGO_CSRF_TRUSTED_ORIGINS = "https://gdzienasniadanie.fly.dev"
+  DATABASE_PATH = "/data/db.sqlite3"
+
+[deploy]
+  release_command = "uv run --no-dev manage.py migrate --noinput"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[mounts]]
+  source = "data"
+  destination = "/data"

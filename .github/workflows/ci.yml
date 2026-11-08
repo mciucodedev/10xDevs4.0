@@ -1,0 +1,18 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+env:
+  DJANGO_SECRET_KEY: ci-only-0123456789-abcdefghijklmnopqrstuvwxyz-ABCDEFGHIJKLMNOPQRSTUVWXYZ
+  DJANGO_ALLOWED_HOSTS: localhost
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --frozen
+      - run: uv run manage.py test
+      - run: uv run mypy .
+      - run: uv run manage.py check --deploy --fail-level WARNING

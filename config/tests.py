@@ -43,3 +43,31 @@ class SettingsTests(SimpleTestCase):
     def test_min_ratings_to_submit_default_is_3(self) -> None:
         mod = reload_settings({"DJANGO_SECRET_KEY": "k"})
         self.assertEqual(mod.MIN_RATINGS_TO_SUBMIT, 3)
+
+
+class ProdSettingsTests(SimpleTestCase):
+    def tearDown(self) -> None:
+        importlib.reload(settings)
+
+    def test_secure_cookies_and_ssl_redirect_when_not_debug(self) -> None:
+        mod = reload_settings({"DJANGO_SECRET_KEY": "k"})
+        self.assertTrue(mod.SESSION_COOKIE_SECURE)
+        self.assertTrue(mod.CSRF_COOKIE_SECURE)
+        self.assertTrue(mod.SECURE_SSL_REDIRECT)
+        self.assertGreater(mod.SECURE_HSTS_SECONDS, 0)
+
+    def test_not_secure_in_debug(self) -> None:
+        mod = reload_settings({"DJANGO_DEBUG": "1"})
+        self.assertFalse(mod.SECURE_SSL_REDIRECT)
+
+    def test_csrf_trusted_origins_from_env(self) -> None:
+        mod = reload_settings({"DJANGO_SECRET_KEY": "k", "DJANGO_CSRF_TRUSTED_ORIGINS": "https://a.com,https://b.com"})
+        self.assertEqual(mod.CSRF_TRUSTED_ORIGINS, ["https://a.com", "https://b.com"])
+
+
+class PrivacyPageTests(SimpleTestCase):
+    def test_privacy_page_is_public_and_lists_stored_data(self) -> None:
+        response = self.client.get("/privacy/")
+        self.assertEqual(response.status_code, 200)
+        for word in ("username", "email", "ratings", "saved places", "delete"):
+            self.assertContains(response, word)
