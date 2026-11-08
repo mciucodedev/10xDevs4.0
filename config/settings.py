@@ -50,6 +50,14 @@ ALLOWED_HOSTS: list[str] = [
     h.strip() for h in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',') if h.strip()
 ]
 
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
+AUTHENTICATION_BACKENDS = [
+    'accounts.backends.EmailOrUsernameBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 # Ratings a user needs before they may submit a new place (FR-010).
 MIN_RATINGS_TO_SUBMIT = 3
 
@@ -64,6 +72,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'places',
+    'accounts',
 ]
 
 MIDDLEWARE = [
