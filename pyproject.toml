@@ -1,0 +1,21 @@
+[project]
+name = "gdzienasniadanie-pl"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "django>=6.1.2",
+]
+
+[dependency-groups]
+dev = [
+    "django-stubs>=6.1.2",
+    "mypy>=2.4.0",
+]
+
+[tool.mypy]
+plugins = ["mypy_django_plugin.main"]
+strict = true
+exclude = ["^\\.venv/", "^context/"]
+
+[tool.django-stubs]
+django_settings_module = "config.settings"
