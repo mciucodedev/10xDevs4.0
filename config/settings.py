@@ -10,22 +10,45 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
+import os
 from pathlib import Path
+
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
+def _load_dotenv(path: Path) -> None:
+    """Load KEY=VALUE lines from a local .env without overriding real env vars."""
+    if os.environ.get('DJANGO_SKIP_DOTENV') or not path.is_file():
+        return
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if line and not line.startswith('#') and '=' in line:
+            key, _, value = line.partition('=')
+            os.environ.setdefault(key.strip(), value.strip())
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-9)&=vf(qdkj$%q(flvoo@-1_#+bngxas@ordbsxka9p_a4lb4*'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+_load_dotenv(BASE_DIR / '.env')
 
-ALLOWED_HOSTS: list[str] = []
+
+DEBUG = os.environ.get('DJANGO_DEBUG', '') in ('1', 'true', 'True')
+
+_secret = os.environ.get('DJANGO_SECRET_KEY')
+if _secret:
+    SECRET_KEY = _secret
+elif DEBUG:
+    SECRET_KEY = 'dev-only-insecure-key'
+else:
+    raise ImproperlyConfigured('DJANGO_SECRET_KEY must be set when DJANGO_DEBUG is off')
+
+ALLOWED_HOSTS: list[str] = [
+    h.strip() for h in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',') if h.strip()
+]
+
+# Ratings a user needs before they may submit a new place (FR-010).
+MIN_RATINGS_TO_SUBMIT = 3
 
 
 # Application definition
@@ -75,7 +98,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': os.environ.get('DATABASE_PATH', str(BASE_DIR / 'db.sqlite3')),
     }
 }
 
@@ -104,7 +127,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Warsaw'
 
 USE_I18N = True
 
