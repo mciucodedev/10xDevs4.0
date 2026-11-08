@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load static %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="{% static 'places/map.css' %}">
+{% endblock %}
+{% block body %}
+<div class="layout">
+  <aside class="panel">
+    <form id="filters">
+      <label><input type="checkbox" name="open_now" value="1"> Open now</label>
+      <fieldset><legend>Or open on</legend>
+        <select name="day"><option value="">any day</option>
+          <option value="0">Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option>
+          <option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option>
+          <option value="6">Sunday</option></select>
+        <input type="time" name="at">
+      </fieldset>
+      <fieldset><legend>Food type</legend>
+        {% for ft in food_types %}<label><input type="checkbox" name="food" value="{{ ft.slug }}"> {{ ft.name }}</label>{% endfor %}
+      </fieldset>
+      <label>Minimum rating
+        <select name="min_rating"><option value="">any</option>
+          <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+      <label><input type="checkbox" name="include_unrated" value="1"> Include unrated</label>
+      <button type="button" id="use-location">Use my location</button>
+      <p id="origin-note" class="note">Click the map to set your reference point.</p>
+    </form>
+    <p id="empty" hidden>No places match these filters — try removing one.</p>
+    <ol id="results"></ol>
+  </aside>
+  <div id="map" role="application" aria-label="Map of breakfast places in Kraków"></div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'places/map.js' %}"></script>
+{% endblock %}

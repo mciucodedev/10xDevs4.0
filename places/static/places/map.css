@@ -1,0 +1,14 @@
+.layout { display: flex; height: calc(100vh - 3rem); }
+.panel { width: 22rem; max-width: 40%; overflow-y: auto; padding: .8rem; box-sizing: border-box; }
+#map { flex: 1; }
+.panel fieldset { margin: .5rem 0; }
+.panel label { display: block; margin: .2rem 0; }
+.note { color: #666; font-size: .85rem; }
+#results { padding-left: 1.2rem; }
+#results li { margin: .5rem 0; }
+.meta { color: #666; font-size: .85rem; }
+@media (max-width: 700px) {
+  .layout { flex-direction: column-reverse; height: auto; }
+  .panel { width: auto; max-width: none; }
+  #map { height: 50vh; flex: none; }
+}

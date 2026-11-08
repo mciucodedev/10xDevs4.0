@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}gdzienasniadanie.pl{% endblock %}</title>
+  <style>
+    body { margin: 0; background: #fff; color-scheme: light; font-family: system-ui, sans-serif; color: #222; }
+    header.site { display: flex; gap: 1rem; align-items: center; padding: .5rem 1rem; background: #fff3d6; }
+    header.site a { color: #7a4b00; text-decoration: none; font-weight: 600; }
+    header.site .spacer { flex: 1; }
+    main.page { max-width: 42rem; margin: 1rem auto; padding: 0 1rem; }
+    .messages li { list-style: none; background: #eef; padding: .4rem .8rem; margin: .3rem 0; }
+    form.inline { display: inline; }
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body>
+<header class="site">
+  <a href="{% url 'map' %}">🥐 gdzienasniadanie.pl</a>
+  {% block nav %}{% endblock %}
+  <span class="spacer"></span>
+  {% include "_account_nav.html" %}
+</header>
+{% if messages %}<ul class="messages">{% for m in messages %}<li>{{ m }}</li>{% endfor %}</ul>{% endif %}
+{% block body %}<main class="page">{% block content %}{% endblock %}</main>{% endblock %}
+</body>
+</html>
