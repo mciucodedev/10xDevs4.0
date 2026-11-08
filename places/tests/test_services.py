@@ -1,7 +1,8 @@
-from datetime import datetime, time
+from datetime import date, datetime, time
 from zoneinfo import ZoneInfo
 
 from django.test import TestCase
+from django.utils import timezone
 
 from places.models import FoodType, OpeningInterval, Place
 from places.services import PlaceFilter, haversine_km, is_open_at, search_places
@@ -19,7 +20,10 @@ def make_place(
     hours: list[tuple[int, str, str]] | None = None,
     types: list[str] | None = None,
 ) -> Place:
-    place = Place.objects.create(name=name, address="x", latitude=lat, longitude=lng)
+    place = Place.objects.create(
+        name=name, address="x", latitude=lat, longitude=lng,
+        hours_verified_at=timezone.localdate() if hours else None,
+    )
     for weekday, opens, closes in hours or []:
         OpeningInterval.objects.create(
             place=place, weekday=weekday, opens=time.fromisoformat(opens),
@@ -119,3 +123,19 @@ class SearchTests(TestCase):
         self.assertAlmostEqual(result.distance_km, 0.0, places=3)
         self.assertIsNone(result.avg_rating)
         self.assertEqual(result.rating_count, 0)
+
+
+class StaleHoursTests(TestCase):
+    def test_open_now_filter_excludes_stale_places(self) -> None:
+        fresh = make_place("fresh", hours=[(0, "08:00", "14:00")])
+        stale = make_place("stale", hours=[(0, "08:00", "14:00")])
+        fresh.hours_verified_at = timezone.localdate()
+        fresh.save()
+        stale.hours_verified_at = date(2020, 1, 1)
+        stale.save()
+        result = search_places(make_filter(open_now_at=MON_10))
+        self.assertEqual([r.place.name for r in result], ["fresh"])
+
+    def test_stale_places_still_listed_without_hours_filter(self) -> None:
+        make_place("stale")
+        self.assertEqual(len(search_places(make_filter())), 1)

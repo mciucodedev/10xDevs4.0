@@ -69,6 +69,7 @@ def places_api(request: HttpRequest) -> JsonResponse:
     except BadParam as exc:
         return JsonResponse({"error": str(exc)}, status=400)
     now = timezone.now()
+    today = timezone.localdate()
     results = [
         {
             "id": r.place.pk,
@@ -79,7 +80,7 @@ def places_api(request: HttpRequest) -> JsonResponse:
             "avg_rating": r.avg_rating,
             "rating_count": r.rating_count,
             "food_types": sorted(t.slug for t in r.place.food_types.all()),
-            "is_open": is_open_at(r.place, now),
+            "is_open": None if r.place.hours_are_stale(today) else is_open_at(r.place, now),
             "url": f"/places/{r.place.pk}/",
         }
         for r in search_places(place_filter)
@@ -101,7 +102,7 @@ def place_detail(request: HttpRequest, pk: int) -> HttpResponse:
         is_saved = SavedPlace.objects.filter(user_id=request.user.pk, place=place).exists()
     return render(request, "places/detail.html", {
         "place": place, "hours": by_day, "avg_rating": avg, "rating_count": count,
-        "is_open": is_open_at(place, timezone.now()), "user_rating": user_rating, "is_saved": is_saved,
+        "is_open": is_open_at(place, timezone.now()), "hours_stale": place.hours_are_stale(timezone.localdate()), "user_rating": user_rating, "is_saved": is_saved,
     })
 
 

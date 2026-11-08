@@ -6,6 +6,7 @@ from math import asin, cos, radians, sin, sqrt
 from zoneinfo import ZoneInfo
 
 from django.db.models import Avg, Count
+from django.utils import timezone
 
 from engagement.models import Rating
 from places.models import Place
@@ -73,7 +74,10 @@ def search_places(f: PlaceFilter) -> list[PlaceResult]:
     places = list(Place.objects.prefetch_related("intervals", "food_types"))
     stats = _rating_stats([p.pk for p in places])
     results: list[PlaceResult] = []
+    today = timezone.localdate()
     for place in places:
+        if (f.open_now_at is not None or f.open_at is not None) and place.hours_are_stale(today):
+            continue
         if f.open_now_at is not None and not is_open_at(place, f.open_now_at):
             continue
         if f.open_at is not None and not is_open_on(place, *f.open_at):

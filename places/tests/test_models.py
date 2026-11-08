@@ -1,4 +1,4 @@
-from datetime import time
+from datetime import date, time, timedelta
 
 from django.core.exceptions import ValidationError
 from django.test import TestCase
@@ -50,3 +50,38 @@ class PlaceAdminTests(TestCase):
         place.refresh_from_db()
         self.assertEqual(place.hours_verified_at, date.today())
         self.assertEqual(place.intervals.count(), 1)
+
+
+class HoursFreshnessTests(TestCase):
+    TODAY = date(2026, 11, 8)
+
+    def place_verified(self, days_ago: int | None) -> Place:
+        place = make_place()
+        if days_ago is not None:
+            place.hours_verified_at = self.TODAY - timedelta(days=days_ago)
+        return place
+
+    def test_stale_after_91_days(self) -> None:
+        self.assertTrue(self.place_verified(91).hours_are_stale(self.TODAY))
+
+    def test_not_stale_at_90_days(self) -> None:
+        self.assertFalse(self.place_verified(90).hours_are_stale(self.TODAY))
+
+    def test_none_verified_is_stale(self) -> None:
+        self.assertTrue(self.place_verified(None).hours_are_stale(self.TODAY))
+
+
+class StaleAdminFilterTests(TestCase):
+    def test_admin_filter_lists_only_stale_places(self) -> None:
+        from django.contrib.auth.models import User
+        from django.utils import timezone
+
+        User.objects.create_superuser("root", "r@example.com", "pw-12345-x")
+        self.client.login(username="root", password="pw-12345-x")
+        make_place("Never verified")
+        fresh = make_place("Fresh")
+        fresh.hours_verified_at = timezone.localdate()
+        fresh.save()
+        response = self.client.get("/admin/places/place/?hours=stale")
+        self.assertContains(response, "Never verified")
+        self.assertNotContains(response, "Fresh")

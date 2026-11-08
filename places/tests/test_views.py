@@ -2,13 +2,17 @@ from datetime import time
 
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from places.models import FoodType, OpeningInterval, Place
 
 
 def make_place(name: str, lat: float = 50.0614, lng: float = 19.9366, types: list[str] | None = None,
-               always_open: bool = False) -> Place:
-    place = Place.objects.create(name=name, address="x", latitude=lat, longitude=lng)
+               always_open: bool = False, stale: bool = False) -> Place:
+    place = Place.objects.create(
+        name=name, address="x", latitude=lat, longitude=lng,
+        hours_verified_at=timezone.localdate() if always_open and not stale else None,
+    )
     if types:
         place.food_types.set(FoodType.objects.filter(slug__in=types))
     if always_open:
@@ -107,3 +111,14 @@ class DetailTests(TestCase):
 
     def test_detail_404_unknown_place(self) -> None:
         self.assertEqual(self.client.get("/places/999/").status_code, 404)
+
+
+class StaleDisplayTests(TestCase):
+    def test_detail_warns_when_hours_stale(self) -> None:
+        place = make_place("old")
+        self.assertContains(self.client.get(f"/places/{place.pk}/"), "may be out of date")
+
+    def test_api_is_open_none_for_stale_places(self) -> None:
+        make_place("old", always_open=True, stale=True)
+        (row,) = self.client.get("/api/places/").json()["results"]
+        self.assertIsNone(row["is_open"])

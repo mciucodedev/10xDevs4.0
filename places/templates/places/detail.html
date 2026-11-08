@@ -4,7 +4,7 @@
 <h1>{{ place.name }}</h1>
 <p>{{ place.address }}, {{ place.city }}
   · <a href="https://www.google.com/maps?q={{ place.latitude|stringformat:'.4f' }},{{ place.longitude|stringformat:'.4f' }}" rel="noopener">Open in Google Maps</a></p>
-<p>{% if is_open %}<strong>Open now</strong>{% else %}Closed now{% endif %}</p>
+{% if hours_stale %}<p><em>Opening hours may be out of date{% if place.hours_verified_at %} (last verified {{ place.hours_verified_at }}){% endif %}.</em></p>{% else %}<p>{% if is_open %}<strong>Open now</strong>{% else %}Closed now{% endif %}</p>{% endif %}
 <p>
   {% if rating_count %}<strong>{{ avg_rating|floatformat:1 }}★</strong> ({{ rating_count }} rating{{ rating_count|pluralize }})
   {% else %}no ratings yet{% endif %}
