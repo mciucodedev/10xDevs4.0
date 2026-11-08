@@ -49,3 +49,30 @@ class ImportPlacesTests(TestCase):
     def test_bundled_sample_seed_file_is_valid(self) -> None:
         call_command("import_places")
         self.assertGreaterEqual(Place.objects.count(), 1)
+
+
+class ReimportTests(TestCase):
+    def test_reimport_keeps_admin_edited_hours_and_verified_date(self) -> None:
+        run_import([ITEM])
+        place = Place.objects.get()
+        place.intervals.all().delete()
+        place.hours_verified_at = date(2026, 1, 1)
+        place.save()
+        run_import([ITEM])
+        place.refresh_from_db()
+        self.assertEqual(place.intervals.count(), 0)
+        self.assertEqual(place.hours_verified_at, date(2026, 1, 1))
+
+    def test_reimport_with_update_flag_overwrites(self) -> None:
+        run_import([ITEM])
+        Place.objects.get().intervals.all().delete()
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "seed.json"
+            path.write_text(json.dumps([ITEM]))
+            call_command("import_places", str(path), "--update")
+        self.assertEqual(Place.objects.get().intervals.count(), 3)
+
+    def test_invalid_instagram_url_in_seed_is_rejected(self) -> None:
+        with self.assertRaises(CommandError):
+            run_import([dict(ITEM, instagram="javascript:alert(1)")])
+        self.assertEqual(Place.objects.count(), 0)

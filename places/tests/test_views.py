@@ -122,3 +122,10 @@ class StaleDisplayTests(TestCase):
         make_place("old", always_open=True, stale=True)
         (row,) = self.client.get("/api/places/").json()["results"]
         self.assertIsNone(row["is_open"])
+
+
+class CraftedInputTests(TestCase):
+    def test_api_at_with_timezone_offset_returns_400_not_500(self) -> None:
+        make_place("p", always_open=True)
+        response = self.client.get("/api/places/", {"day": "0", "at": "09:00+01:00"})
+        self.assertEqual(response.status_code, 400)

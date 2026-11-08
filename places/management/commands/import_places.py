@@ -5,6 +5,7 @@ from datetime import time
 from pathlib import Path
 from typing import Any
 
+from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand, CommandError, CommandParser
 from django.db import transaction
 from django.utils import timezone
@@ -20,6 +21,10 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument("path", nargs="?", default=str(DEFAULT_SEED))
+        parser.add_argument(
+            "--update", action="store_true",
+            help="Overwrite hours and details of places that already exist",
+        )
 
     def handle(self, *args: Any, **options: Any) -> None:
         path = Path(options["path"])
@@ -29,20 +34,21 @@ class Command(BaseCommand):
             raise CommandError(f"Cannot read seed file {path}: {exc}") from exc
         with transaction.atomic():
             for item in items:
-                self._import_item(item)
+                self._import_item(item, update=options["update"])
         self.stdout.write(f"Imported {len(items)} places")
 
-    def _import_item(self, item: dict[str, Any]) -> None:
+    def _import_item(self, item: dict[str, Any], update: bool) -> None:
         try:
             types = [FoodType.objects.get(slug=slug) for slug in item.get("food_types", [])]
-            place, _ = Place.objects.update_or_create(
-                name=item["name"], address=item["address"],
-                defaults={
-                    "latitude": item["lat"], "longitude": item["lng"],
-                    "instagram_url": item.get("instagram", ""),
-                    "hours_verified_at": timezone.localdate(),
-                },
-            )
+            existing = Place.objects.filter(name=item["name"], address=item["address"]).first()
+            if existing is not None and not update:
+                return  # keep admin edits and the real hours_verified_at
+            place = existing or Place(name=item["name"], address=item["address"])
+            place.latitude, place.longitude = item["lat"], item["lng"]
+            place.instagram_url = item.get("instagram", "")
+            place.hours_verified_at = timezone.localdate()
+            place.full_clean(exclude=["food_types"])
+            place.save()
             place.food_types.set(types)
             place.intervals.all().delete()
             for day, spans in item.get("hours", {}).items():
@@ -51,5 +57,5 @@ class Command(BaseCommand):
                         place=place, weekday=DAYS.index(day),
                         opens=time.fromisoformat(opens), closes=time.fromisoformat(closes),
                     )
-        except (FoodType.DoesNotExist, KeyError, ValueError) as exc:
+        except (FoodType.DoesNotExist, KeyError, ValueError, ValidationError) as exc:
             raise CommandError(f"Bad seed item {item.get('name', '?')!r}: {exc!r}") from exc

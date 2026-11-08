@@ -71,3 +71,14 @@ class PrivacyPageTests(SimpleTestCase):
         self.assertEqual(response.status_code, 200)
         for word in ("username", "email", "ratings", "saved places", "delete"):
             self.assertContains(response, word)
+
+
+class PrivacyAccuracyTests(SimpleTestCase):
+    def test_privacy_discloses_location_in_logs_csrf_cookie_and_third_party_assets(self) -> None:
+        response = self.client.get("/privacy/")
+        for text in ("server logs", "CSRF", "unpkg"):
+            self.assertContains(response, text)
+
+    def test_privacy_shows_configured_contact_email(self) -> None:
+        with self.settings(CONTACT_EMAIL="hello@example.com"):
+            self.assertContains(self.client.get("/privacy/"), "hello@example.com")

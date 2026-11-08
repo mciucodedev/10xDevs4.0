@@ -58,6 +58,9 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
+# Shown on the privacy page as the address for data-deletion requests.
+CONTACT_EMAIL = os.environ.get('DJANGO_CONTACT_EMAIL', '')
+
 # Ratings a user needs before they may submit a new place (FR-010).
 MIN_RATINGS_TO_SUBMIT = 3
 

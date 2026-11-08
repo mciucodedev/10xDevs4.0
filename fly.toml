@@ -8,9 +8,6 @@ primary_region = "waw"
   DJANGO_CSRF_TRUSTED_ORIGINS = "https://gdzienasniadanie.fly.dev"
   DATABASE_PATH = "/data/db.sqlite3"
 
-[deploy]
-  release_command = "uv run --no-dev manage.py migrate --noinput"
-
 [http_service]
   internal_port = 8080
   force_https = true

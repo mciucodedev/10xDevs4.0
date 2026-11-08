@@ -46,8 +46,8 @@ def parse_filter(request: HttpRequest) -> PlaceFilter:
             at = time.fromisoformat(at_raw)
         except ValueError as exc:
             raise BadParam("day must be 0-6 and at must be HH:MM") from exc
-        if not 0 <= day <= 6:
-            raise BadParam("day must be 0-6")
+        if not 0 <= day <= 6 or at.tzinfo is not None:
+            raise BadParam("day must be 0-6 and at must be HH:MM without a timezone")
         open_at = (day, at)
     return PlaceFilter(
         open_now_at=timezone.now() if request.GET.get("open_now") == "1" else None,

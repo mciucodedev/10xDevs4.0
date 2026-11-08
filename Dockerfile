@@ -7,4 +7,5 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY . .
 RUN DJANGO_SECRET_KEY=build uv run --no-dev manage.py collectstatic --noinput
 EXPOSE 8080
-CMD ["uv", "run", "--no-dev", "gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8080", "--workers", "2"]
+# Migrate at start: the volume holding SQLite is not mounted in Fly release machines.
+CMD ["sh", "-c", "uv run --no-dev manage.py migrate --noinput && exec uv run --no-dev gunicorn config.wsgi:application --bind 0.0.0.0:8080 --workers 2"]
