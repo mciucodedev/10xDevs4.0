@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Add a place — gdzienasniadanie.pl{% endblock %}
+{% block head %}<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">{% endblock %}
+{% block content %}
+<h1>Add a place</h1>
+<p>Click the map to fill in the location. New places are published immediately; opening hours are added by an admin.</p>
+<div id="pick-map" style="height: 18rem;"></div>
+<form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Publish</button></form>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  var map = L.map('pick-map').setView([50.0614, 19.9366], 13), pin = null;
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'}).addTo(map);
+  map.on('click', function (e) {
+    if (pin) pin.setLatLng(e.latlng); else pin = L.marker(e.latlng).addTo(map);
+    document.getElementById('id_latitude').value = e.latlng.lat.toFixed(6);
+    document.getElementById('id_longitude').value = e.latlng.lng.toFixed(6);
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Add a place</h1>
+<p>To keep the map trustworthy, you can add places once you have rated a few. Please rate {{ missing }} more place{{ missing|pluralize }} first.</p>
+<p><a href="{% url 'map' %}">Back to the map</a></p>
+{% endblock %}

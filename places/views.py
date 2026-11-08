@@ -1,10 +1,16 @@
 from datetime import time
 
+from typing import cast
+
+from django.conf import settings
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.http import HttpRequest, HttpResponse, JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from engagement.models import Rating, SavedPlace
+from places.forms import PlaceSubmissionForm
 from places.models import WEEKDAYS, FoodType, Place
 from places.services import PlaceFilter, is_open_at, place_rating, search_places
 
@@ -97,3 +103,20 @@ def place_detail(request: HttpRequest, pk: int) -> HttpResponse:
         "place": place, "hours": by_day, "avg_rating": avg, "rating_count": count,
         "is_open": is_open_at(place, timezone.now()), "user_rating": user_rating, "is_saved": is_saved,
     })
+
+
+@login_required
+def place_new(request: HttpRequest) -> HttpResponse:
+    user = cast(User, request.user)
+    rated = Rating.objects.filter(user=user).values("place_id").distinct().count()
+    missing = settings.MIN_RATINGS_TO_SUBMIT - rated
+    if missing > 0:
+        return render(request, "places/submit_blocked.html", {"missing": missing}, status=403)
+    form = PlaceSubmissionForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        place = form.save(commit=False)
+        place.created_by = user
+        place.save()
+        form.save_m2m()
+        return redirect("place-detail", pk=place.pk)
+    return render(request, "places/submit.html", {"form": form})
