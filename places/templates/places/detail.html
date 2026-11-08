@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}{{ place.name }} — gdzienasniadanie.pl{% endblock %}
+{% block content %}
+<h1>{{ place.name }}</h1>
+<p>{{ place.address }}, {{ place.city }}
+  · <a href="https://www.google.com/maps?q={{ place.latitude|stringformat:'.4f' }},{{ place.longitude|stringformat:'.4f' }}" rel="noopener">Open in Google Maps</a></p>
+<p>{% if is_open %}<strong>Open now</strong>{% else %}Closed now{% endif %}</p>
+<p>
+  {% if rating_count %}<strong>{{ avg_rating|floatformat:1 }}★</strong> ({{ rating_count }} rating{{ rating_count|pluralize }})
+  {% else %}no ratings yet{% endif %}
+</p>
+{% if place.food_types.all %}<p>{% for t in place.food_types.all %}{{ t.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+{% if place.instagram_url %}<p><a href="{{ place.instagram_url }}" rel="noopener nofollow">Instagram</a></p>{% endif %}
+<h2>Opening hours</h2>
+<table>
+  {% for day, spans in hours.items %}<tr><th align="left">{{ day }}</th><td>{% if spans %}{{ spans|join:", " }}{% else %}closed / unknown{% endif %}</td></tr>{% endfor %}
+</table>
+{% block actions %}{% endblock %}
+{% endblock %}

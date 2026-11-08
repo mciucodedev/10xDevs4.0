@@ -1,11 +1,11 @@
 from datetime import time
 
 from django.http import HttpRequest, HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 
-from places.models import FoodType
-from places.services import PlaceFilter, is_open_at, search_places
+from places.models import WEEKDAYS, FoodType, Place
+from places.services import PlaceFilter, is_open_at, place_rating, search_places
 
 DEFAULT_ORIGIN = (50.0614, 19.9366)
 
@@ -78,3 +78,15 @@ def places_api(request: HttpRequest) -> JsonResponse:
         for r in search_places(place_filter)
     ]
     return JsonResponse({"results": results, "count": len(results)})
+
+
+def place_detail(request: HttpRequest, pk: int) -> HttpResponse:
+    place = get_object_or_404(Place.objects.prefetch_related("intervals", "food_types"), pk=pk)
+    by_day: dict[str, list[str]] = {name: [] for name in WEEKDAYS}
+    for iv in place.intervals.all():
+        by_day[WEEKDAYS[iv.weekday]].append(f"{iv.opens:%H:%M}–{iv.closes:%H:%M}")
+    avg, count = place_rating(place)
+    return render(request, "places/detail.html", {
+        "place": place, "hours": by_day, "avg_rating": avg, "rating_count": count,
+        "is_open": is_open_at(place, timezone.now()),
+    })

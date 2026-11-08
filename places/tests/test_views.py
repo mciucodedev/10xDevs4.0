@@ -75,3 +75,35 @@ class MapPageTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "leaflet")
         self.assertContains(response, "Include unrated")
+
+
+class DetailTests(TestCase):
+    def test_detail_shows_address_hours_types_and_maps_link(self) -> None:
+        place = make_place("Bagel", types=["vegan"])
+        place.address = "Józefa 1"
+        place.save()
+        OpeningInterval.objects.create(place=place, weekday=0, opens=time(8), closes=time(14))
+        response = self.client.get(f"/places/{place.pk}/")
+        self.assertContains(response, "Józefa 1")
+        self.assertContains(response, "Monday")
+        self.assertContains(response, "08:00")
+        self.assertContains(response, "Vegan")
+        self.assertContains(response, "https://www.google.com/maps?q=50.0614,19.9366")
+        self.assertContains(response, "no ratings yet")
+
+    def test_detail_hides_instagram_when_blank(self) -> None:
+        place = make_place("p")
+        self.assertNotContains(self.client.get(f"/places/{place.pk}/"), "Instagram")
+
+    def test_detail_shows_instagram_when_present(self) -> None:
+        place = make_place("p")
+        place.instagram_url = "https://instagram.com/p"
+        place.save()
+        self.assertContains(self.client.get(f"/places/{place.pk}/"), 'href="https://instagram.com/p"')
+
+    def test_detail_escapes_user_supplied_name(self) -> None:
+        place = make_place("<script>alert(1)</script>")
+        self.assertNotContains(self.client.get(f"/places/{place.pk}/"), "<script>alert(1)")
+
+    def test_detail_404_unknown_place(self) -> None:
+        self.assertEqual(self.client.get("/places/999/").status_code, 404)

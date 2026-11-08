@@ -58,6 +58,10 @@ def _rating_stats(place_ids: list[int]) -> dict[int, tuple[float | None, int]]:
     return {}
 
 
+def place_rating(place: Place) -> tuple[float | None, int]:
+    return _rating_stats([place.pk]).get(place.pk, (None, 0))
+
+
 def search_places(f: PlaceFilter) -> list[PlaceResult]:
     places = list(Place.objects.prefetch_related("intervals", "food_types"))
     stats = _rating_stats([p.pk for p in places])
