@@ -19,3 +19,13 @@ class Rating(models.Model):
 
     def __str__(self) -> str:
         return f"{self.user} rated {self.place} {self.value}"
+
+
+class SavedPlace(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="saved_places")
+    place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name="saved_by")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["user", "place"], name="one_save_per_user_place")]
+        ordering = ["-created_at"]

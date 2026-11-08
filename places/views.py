@@ -4,7 +4,7 @@ from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 
-from engagement.models import Rating
+from engagement.models import Rating, SavedPlace
 from places.models import WEEKDAYS, FoodType, Place
 from places.services import PlaceFilter, is_open_at, place_rating, search_places
 
@@ -88,10 +88,12 @@ def place_detail(request: HttpRequest, pk: int) -> HttpResponse:
         by_day[WEEKDAYS[iv.weekday]].append(f"{iv.opens:%H:%M}–{iv.closes:%H:%M}")
     avg, count = place_rating(place)
     user_rating = None
+    is_saved = False
     if request.user.is_authenticated:
         mine = Rating.objects.filter(user_id=request.user.pk, place=place).first()
         user_rating = mine.value if mine else None
+        is_saved = SavedPlace.objects.filter(user_id=request.user.pk, place=place).exists()
     return render(request, "places/detail.html", {
         "place": place, "hours": by_day, "avg_rating": avg, "rating_count": count,
-        "is_open": is_open_at(place, timezone.now()), "user_rating": user_rating,
+        "is_open": is_open_at(place, timezone.now()), "user_rating": user_rating, "is_saved": is_saved,
     })

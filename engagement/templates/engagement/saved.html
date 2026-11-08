@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Saved places — gdzienasniadanie.pl{% endblock %}
+{% block content %}
+<h1>Saved places</h1>
+{% for s in saved %}
+  <p><a href="{% url 'place-detail' s.place.pk %}">{{ s.place.name }}</a> — {{ s.place.address }}</p>
+{% empty %}
+  <p>You have nothing saved yet. Find a place on the <a href="{% url 'map' %}">map</a>.</p>
+{% endfor %}
+{% endblock %}

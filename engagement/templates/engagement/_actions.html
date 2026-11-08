@@ -6,6 +6,9 @@
   </select>
   <button type="submit">Rate</button>
 </form>
+<form method="post" action="{% if is_saved %}{% url 'unsave' place.pk %}{% else %}{% url 'save' place.pk %}{% endif %}">{% csrf_token %}
+  <button type="submit">{% if is_saved %}Remove from saved{% else %}Save for later{% endif %}</button>
+</form>
 {% else %}
 <p><a href="{% url 'login' %}?next={{ request.path }}">Log in</a> to rate or save this place.</p>
 {% endif %}
