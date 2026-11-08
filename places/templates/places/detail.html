@@ -16,4 +16,5 @@
   {% for day, spans in hours.items %}<tr><th align="left">{{ day }}</th><td>{% if spans %}{{ spans|join:", " }}{% else %}closed / unknown{% endif %}</td></tr>{% endfor %}
 </table>
 {% block actions %}{% endblock %}
+{% include "engagement/_actions.html" %}
 {% endblock %}

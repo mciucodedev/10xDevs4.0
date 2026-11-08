@@ -5,6 +5,9 @@ from datetime import datetime, time
 from math import asin, cos, radians, sin, sqrt
 from zoneinfo import ZoneInfo
 
+from django.db.models import Avg, Count
+
+from engagement.models import Rating
 from places.models import Place
 
 WARSAW = ZoneInfo("Europe/Warsaw")
@@ -54,8 +57,12 @@ class PlaceResult:
 
 
 def _rating_stats(place_ids: list[int]) -> dict[int, tuple[float | None, int]]:
-    """Replaced by the real aggregate in the ratings task."""
-    return {}
+    rows = (
+        Rating.objects.filter(place_id__in=place_ids)
+        .values("place_id")
+        .annotate(avg=Avg("value"), n=Count("id"))
+    )
+    return {row["place_id"]: (row["avg"], row["n"]) for row in rows}
 
 
 def place_rating(place: Place) -> tuple[float | None, int]:
