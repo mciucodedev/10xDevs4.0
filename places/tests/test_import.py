@@ -46,9 +46,9 @@ class ImportPlacesTests(TestCase):
             run_import([good, bad])
         self.assertEqual(Place.objects.count(), 0)
 
-    def test_bundled_sample_seed_file_is_valid(self) -> None:
+    def test_bundled_seed_file_is_valid_and_has_at_least_30_places(self) -> None:
         call_command("import_places")
-        self.assertGreaterEqual(Place.objects.count(), 1)
+        self.assertGreaterEqual(Place.objects.count(), 30)
 
 
 class ReimportTests(TestCase):

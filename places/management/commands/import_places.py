@@ -12,7 +12,7 @@ from django.utils import timezone
 
 from places.models import FoodType, OpeningInterval, Place
 
-DEFAULT_SEED = Path(__file__).resolve().parents[2] / "data" / "seed.sample.json"
+DEFAULT_SEED = Path(__file__).resolve().parents[2] / "data" / "seed.json"
 DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
 
