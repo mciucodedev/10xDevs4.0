@@ -82,3 +82,21 @@ class PrivacyAccuracyTests(SimpleTestCase):
     def test_privacy_shows_configured_contact_email(self) -> None:
         with self.settings(CONTACT_EMAIL="hello@example.com"):
             self.assertContains(self.client.get("/privacy/"), "hello@example.com")
+
+
+class OsmTilePolicyTests(SimpleTestCase):
+    """OSM tile usage policy: tile requests need a Referer; attribution must link to the copyright page."""
+
+    COPYRIGHT = "https://www.openstreetmap.org/copyright"
+
+    def test_referrer_policy_sends_origin_to_tile_server(self) -> None:
+        response = self.client.get("/privacy/")
+        self.assertEqual(response["Referrer-Policy"], "strict-origin-when-cross-origin")
+
+    def test_map_js_attribution_links_to_osm_copyright(self) -> None:
+        text = (settings.BASE_DIR / "places/static/places/map.js").read_text()
+        self.assertIn(self.COPYRIGHT, text)
+
+    def test_submit_page_attribution_links_to_osm_copyright(self) -> None:
+        text = (settings.BASE_DIR / "places/templates/places/submit.html").read_text()
+        self.assertIn(self.COPYRIGHT, text)

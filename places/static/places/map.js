@@ -3,7 +3,7 @@
   var origin = DEFAULT_ORIGIN.slice();
   var map = L.map('map').setView(DEFAULT_ORIGIN, 13);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'
+    maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(map);
   var markers = L.layerGroup().addTo(map);
   var originMarker = L.circleMarker(origin, { radius: 8, color: '#c0392b' }).addTo(map);

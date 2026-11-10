@@ -166,6 +166,8 @@ STORAGES = {
 CSRF_TRUSTED_ORIGINS: list[str] = [
     o.strip() for o in os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',') if o.strip()
 ]
+# OSM's tile policy requires a Referer on tile requests; Django's default (same-origin) strips it.
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 SECURE_SSL_REDIRECT = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
